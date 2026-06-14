@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP EAMCET 2026 Rank Predictor</title>
+<style>
+  :root{
+    --primary:#0b5394;
+    --primary-dark:#073763;
+    --accent:#1c7ed6;
+    --bg:#f0f6ff;
+    --card:#ffffff;
+    --border:#cfe2ff;
+    --text:#1a1a1a;
+    --muted:#5b6b7c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Arial,sans-serif;
+    background:linear-gradient(135deg,#e7f1ff 0%,#f5f9ff 100%);
+    color:var(--text);
+    min-height:100vh;
+    padding:20px;
+  }
+  .container{
+    max-width:600px;
+    margin:0 auto;
+  }
+  header{
+    background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);
+    color:#fff;
+    border-radius:14px;
+    padding:24px 20px;
+    text-align:center;
+    margin-bottom:20px;
+    box-shadow:0 4px 12px rgba(11,83,148,0.25);
+  }
+  header h1{
+    font-size:1.5rem;
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  header p{
+    font-size:0.9rem;
+    opacity:0.9;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:18px;
+    box-shadow:0 2px 8px rgba(11,83,148,0.06);
+  }
+  .card h2{
+    color:var(--primary-dark);
+    font-size:1.05rem;
+    margin-bottom:14px;
+    border-bottom:2px solid var(--border);
+    padding-bottom:8px;
+  }
+  .input-group{
+    margin-bottom:14px;
+  }
+  .input-group label{
+    display:block;
+    font-size:0.9rem;
+    font-weight:600;
+    color:var(--primary-dark);
+    margin-bottom:6px;
+  }
+  .input-group input{
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid var(--border);
+    border-radius:8px;
+    font-size:1rem;
+    transition:border-color 0.2s, box-shadow 0.2s;
+  }
+  .input-group input:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(28,126,214,0.15);
+  }
+  .input-group .err{
+    color:#c0392b;
+    font-size:0.78rem;
+    margin-top:4px;
+    min-height:14px;
+  }
+  button{
+    width:100%;
+    background:linear-gradient(135deg,var(--accent) 0%,var(--primary) 100%);
+    color:#fff;
+    border:none;
+    padding:14px;
+    border-radius:10px;
+    font-size:1.05rem;
+    font-weight:700;
+    cursor:pointer;
+    transition:transform 0.1s, box-shadow 0.2s;
+    box-shadow:0 4px 10px rgba(11,83,148,0.25);
+  }
+  button:active{
+    transform:scale(0.98);
+  }
+  .results{
+    display:none;
+  }
+  .results.show{
+    display:block;
+    animation:fadeIn 0.4s ease;
+  }
+  @keyframes fadeIn{
+    from{opacity:0; transform:translateY(8px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .score-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .score-box{
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px;
+    text-align:center;
+  }
+  .score-box .label{
+    font-size:0.75rem;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    margin-bottom:4px;
+  }
+  .score-box .value{
+    font-size:1.25rem;
+    font-weight:700;
+    color:var(--primary-dark);
+  }
+  .final-score{
+    background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);
+    color:#fff;
+    border-radius:10px;
+    padding:18px;
+    text-align:center;
+    margin-top:14px;
+  }
+  .final-score .label{
+    font-size:0.85rem;
+    opacity:0.9;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    margin-bottom:4px;
+  }
+  .final-score .value{
+    font-size:2rem;
+    font-weight:800;
+  }
+  .rank-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+  .rank-card{
+    border-radius:10px;
+    padding:14px 16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border:1.5px solid;
+  }
+  .rank-card.best{
+    background:#e8f7ee;
+    border-color:#34c759;
+  }
+  .rank-card.expected{
+    background:#e7f1ff;
+    border-color:var(--accent);
+  }
+  .rank-card.worst{
+    background:#fdecec;
+    border-color:#e74c3c;
+  }
+  .rank-card .rtitle{
+    font-size:0.9rem;
+    font-weight:700;
+  }
+  .rank-card.best .rtitle{color:#1e8e4f;}
+  .rank-card.expected .rtitle{color:var(--primary-dark);}
+  .rank-card.worst .rtitle{color:#c0392b;}
+  .rank-card .rvalue{
+    font-size:1.15rem;
+    font-weight:800;
+    color:var(--text);
+  }
+  .note{
+    font-size:0.78rem;
+    color:var(--muted);
+    margin-top:14px;
+    line-height:1.5;
+    text-align:center;
+  }
+  footer{
+    text-align:center;
+    font-size:0.78rem;
+    color:var(--muted);
+    margin-top:10px;
+    padding-bottom:10px;
+  }
+  @media (max-width:420px){
+    .score-grid{grid-template-columns:1fr 1fr;}
+    header h1{font-size:1.3rem;}
+    .final-score .value{font-size:1.7rem;}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>AP EAMCET 2026 Rank Predictor</h1>
+    <p>Estimate your rank based on Intermediate &amp; EAMCET scores</p>
+  </header>
+
+  <div class="card">
+    <h2>Enter Your Marks</h2>
+    <div class="input-group">
+      <label for="interMarks">Intermediate Marks (out of 600)</label>
+      <input type="number" id="interMarks" placeholder="e.g. 540" min="0" max="600" step="0.01">
+      <div class="err" id="interErr"></div>
+    </div>
+    <div class="input-group">
+      <label for="eamcetMarks">AP EAMCET Marks (out of 160)</label>
+      <input type="number" id="eamcetMarks" placeholder="e.g. 120" min="0" max="160" step="0.01">
+      <div class="err" id="eamcetErr"></div>
+    </div>
+    <button onclick="calculate()">Predict My Rank</button>
+  </div>
+
+  <div class="card results" id="resultsCard">
+    <h2>Score Breakdown</h2>
+    <div class="score-grid">
+      <div class="score-box">
+        <div class="label">Inter %</div>
+        <div class="value" id="interPct">-</div>
+      </div>
+      <div class="score-box">
+        <div class="label">Inter Weightage (25%)</div>
+        <div class="value" id="interWeight">-</div>
+      </div>
+      <div class="score-box">
+        <div class="label">EAMCET %</div>
+        <div class="value" id="eamcetPct">-</div>
+      </div>
+      <div class="score-box">
+        <div class="label">EAMCET Weightage (75%)</div>
+        <div class="value" id="eamcetWeight">-</div>
+      </div>
+    </div>
+    <div class="final-score">
+      <div class="label">Final Score (out of 100)</div>
+      <div class="value" id="finalScore">-</div>
+    </div>
+  </div>
+
+  <div class="card results" id="rankCard">
+    <h2>Predicted Rank Range</h2>
+    <div class="rank-grid">
+      <div class="rank-card best">
+        <span class="rtitle">Best Case Rank</span>
+        <span class="rvalue" id="bestRank">-</span>
+      </div>
+    </div>
+    <p class="note">Ranks are approximate estimates based on historical AP EAMCET trends and prior year cutoffs. Actual ranks depend on the difficulty level of the paper, total candidates, and category-wise normalization for that year.</p>
+  </div>
+
+  <footer>AP EAMCET 2026 &mdash; Rank Predictor Tool</footer>
+</div>
+
+<script>
+function calculate(){
+  const interInput = document.getElementById('interMarks');
+  const eamcetInput = document.getElementById('eamcetMarks');
+  const interErr = document.getElementById('interErr');
+  const eamcetErr = document.getElementById('eamcetErr');
+
+  interErr.textContent = '';
+  eamcetErr.textContent = '';
+
+  const inter = parseFloat(interInput.value);
+  const eamcet = parseFloat(eamcetInput.value);
+
+  let valid = true;
+
+  if(isNaN(inter) || inter < 0 || inter > 600){
+    interErr.textContent = 'Enter a valid value between 0 and 600';
+    valid = false;
+  }
+  if(isNaN(eamcet) || eamcet < 0 || eamcet > 160){
+    eamcetErr.textContent = 'Enter a valid value between 0 and 160';
+    valid = false;
+  }
+
+  if(!valid){
+    document.getElementById('resultsCard').classList.remove('show');
+    document.getElementById('rankCard').classList.remove('show');
+    return;
+  }
+
+  const interPct = (inter / 600) * 100;
+  const interWeight = interPct * 25 / 100;
+  const eamcetPct = (eamcet / 160) * 100;
+  const eamcetWeight = eamcetPct * 75 / 100;
+  const finalScore = interWeight + eamcetWeight;
+
+  document.getElementById('interPct').textContent = interPct.toFixed(2) + '%';
+  document.getElementById('interWeight').textContent = interWeight.toFixed(2);
+  document.getElementById('eamcetPct').textContent = eamcetPct.toFixed(2) + '%';
+  document.getElementById('eamcetWeight').textContent = eamcetWeight.toFixed(2);
+  document.getElementById('finalScore').textContent = finalScore.toFixed(2);
+
+  // Rank estimation model based on final score (0-100 scale)
+  // Calibrated approximate mapping using historical AP EAMCET trends
+  const ranks = estimateRank(finalScore);
+
+  document.getElementById('bestRank').textContent = ranks.best.toLocaleString('en-IN');
+
+  document.getElementById('resultsCard').classList.add('show');
+  document.getElementById('rankCard').classList.add('show');
+}
+
+function estimateRank(score){
+  // Fixed historical lookup table mapping Final Score (/100) to rank range
+  let low, high;
+
+  if(score >= 95){       low = 1;       high = 100;     }
+  else if(score >= 90){  low = 100;     high = 500;     }
+  else if(score >= 85){  low = 500;     high = 1500;    }
+  else if(score >= 80){  low = 1500;    high = 3000;    }
+  else if(score >= 75){  low = 3000;    high = 6000;    }
+  else if(score >= 70){  low = 6000;    high = 10000;   }
+  else if(score >= 65){  low = 10000;   high = 20000;   }
+  else if(score >= 60){  low = 20000;   high = 35000;   }
+  else if(score >= 55){  low = 35000;   high = 60000;   }
+  else if(score >= 50){  low = 60000;   high = 90000;   }
+  else if(score >= 45){  low = 90000;   high = 120000;  }
+  else {                 low = 120000;  high = 200000;  }
+
+  // Expected rank = midpoint of the range
+  const expected = Math.round((low + high) / 2);
+
+  // Best Case = 15% better (lower) than Expected
+  const best = Math.max(1, Math.round(expected * 0.85));
+
+  // Worst Case = 15% worse (higher) than Expected
+  const worst = Math.round(expected * 1.15);
+
+  return { best, expected, worst };
+}
+</script>
+</body>
+</html>
